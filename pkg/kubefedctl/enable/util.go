@@ -83,7 +83,7 @@ func CrdForAPIResource(apiResource metav1.APIResource, validation *apiextv1b1.Cu
 }
 
 func LookupAPIResource(config *rest.Config, key, targetVersion string) (*metav1.APIResource, error) {
-	resourceLists, err := GetServerPreferredResources(config)
+	resourceLists, err := GetServerResources(config)
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +147,20 @@ func GetServerPreferredResources(config *rest.Config) ([]*metav1.APIResourceList
 	}
 
 	resourceLists, err := client.ServerPreferredResources()
+	if err != nil {
+		return nil, errors.Wrap(err, "Error listing api resources")
+	}
+	return resourceLists, nil
+}
+
+func GetServerResources(config *rest.Config) ([]*metav1.APIResourceList, error) {
+	// TODO(marun) Consider using a caching scheme ala kubectl
+	client, err := discovery.NewDiscoveryClientForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error creating discovery client")
+	}
+
+	resourceLists, err := client.ServerResources()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error listing api resources")
 	}
